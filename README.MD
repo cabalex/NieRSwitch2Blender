@@ -9,13 +9,13 @@ Fork of WoefulWolf's [Nier2Blender 2.8](https://github.com/WoefulWolf/NieR2Blend
 <br>
 
 ## Why does the original add-on not work with Astral Chain's files?
-While the model format and much of the .DAT/.DTT format are similar, if not identical, the texture formats are completely different and are not compatible. Since Astral Chain is made for the Switch, while NieR isn't, it relies on a different texture compression method known as ASTC for many of its textures. ASTC and NieR's texture format (.DDS) are not compatible, and hence the original addon doesn't load textures properly when importing a model from Astral Chain. This plugin (in theory) should fix this.
+While the model format and much of the .DAT/.DTT format are similar, if not identical, the texture formats are completely different. Since Astral Chain is made for the Switch, while NieR isn't, it relies on a different texture compression method known as ASTC for many of its textures. ASTC and NieR's texture format (.DDS) are not compatible, and hence the original addon doesn't load textures properly when importing a model from Astral Chain. Along with this, the Switch swizzles its textures, so the textures from AC must be unswizzled in order to be used. This add-on (in theory) should fix this.
 <br>
 
 
 ## Notable things
 * Some Astral Chain models have DDS textures on them, most notably being the Legion's police branding. While this add-on fixes the header data and allows for loading, it sets an invalid fourCC (DXT4) which Blender does not know how to read, so it falls back to uncompressed. However, setting it to DXT5 (which is what the textures are in) immediately crashes Blender on some models (e.x. the Sword Legion, em00a0). There may be something invalid with my texture loading, but uncompressed textures "work" for now.
-* The add-on converts the ASTC textures to PNG. The only encoder/decoder I could find that converts from ASTC to DDS only converts to DX10, which Blender and the game do not support. There's probably a better method out there, but I just haven't found one.
+* The add-on converts the ASTC textures to PNG. The only encoder/decoder I could find that converts from ASTC to DDS only converts to DX10, which Blender and the game do not support. There's probably a better method out there, but I just haven't found one. This may cause issues with mipmaps later down the line, however (although I'm fairly certain the EXE included can encode ASTC mipmaps dynamically).
 * I include `astcenc-avx2.exe` from the [ASTC Encoder](https://github.com/ARM-software/astc-encoder) for decoding ASTC textures, which might not be compatible with many systems. If it doesn't work, you can try replacing the EXE with one that does. The EXE is called in `wmb_importer.py` around line ~598.
 * Exporting to OBJ/FBX "works", but I have not modified the existing code there. It probably needs to be changed to include PNG support, but it doesn't throw any errors in my testing (?). 
 * I rely on some libraries that probably don't need to be imported.
