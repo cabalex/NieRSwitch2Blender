@@ -42,11 +42,10 @@ class ImportDATNier2blender(bpy.types.Operator, ImportHelper):
 
     reset_blend: bpy.props.BoolProperty(name="Reset Blender Scene on Import", default=True)
     bulk_import: bpy.props.BoolProperty(name="Bulk Import All DTT/DATs In Folder (Experimental)", default=False)
-    only_extract: bpy.props.BoolProperty(name="Only Extract DTT/DAT Contents. (Experimental)", default=False)
 
     def execute(self, context):
         from . import wmb_importer
-        if self.reset_blend and not self.only_extract:
+        if self.reset_blend:
             wmb_importer.reset_blend()
         if self.bulk_import:
             folder = os.path.split(self.filepath)[0]
@@ -71,7 +70,7 @@ class ImportDATNier2blender(bpy.types.Operator, ImportHelper):
                         if not os.path.exists(wmb_filepath):
                             wmb_filepath = extract_dir + '\\' + tailless_tail + '.dat\\' + wtp_filename[:-4] + '.wmb'                     # if not in dtt, then must be in dat
 
-                        wmb_importer.main(self.only_extract, wmb_filepath)
+                        wmb_importer.main(wmb_filepath)
                     except:
                         print('ERROR: FAILED TO IMPORT', filename)
             return {'FINISHED'}
@@ -95,7 +94,7 @@ class ImportDATNier2blender(bpy.types.Operator, ImportHelper):
                 wmb_filepath = extract_dir + '\\' + tailless_tail + '.dat\\' + wtp_filename[:-4] + '.wmb'                     # if not in dtt, then must be in dat
 
             from . import wmb_importer
-            return wmb_importer.main(self.only_extract, wmb_filepath)
+            return wmb_importer.main(wmb_filepath)
 
 # Registration
 

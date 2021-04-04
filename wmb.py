@@ -401,9 +401,9 @@ class WMB3(object):
 		if os.path.exists(wmb_file.replace('.dtt','.dat').replace('.wmb','.wta')):
 			print('open wta file')
 			wta_fp = open(wmb_file.replace('.dtt','.dat').replace('.wmb','.wta'),'rb')
-		if os.path.exists(wmb_file.replace('.wmb','.wtp')):	
+		if os.path.exists(wmb_file.replace('.dat','.dtt').replace('.wmb','.wtp')):	
 			print('open wtp file')
-			self.wtp_fp = open(wmb_file.replace('.wmb','.wtp'),'rb')
+			self.wtp_fp = open(wmb_file.replace('.dat','.dtt').replace('.wmb','.wtp'),'rb')
 		
 		if wta_fp:
 			self.wta = WTA(wta_fp)

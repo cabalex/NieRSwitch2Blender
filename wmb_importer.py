@@ -232,6 +232,13 @@ def consturct_materials(texture_dir, material):
 				normal_maps[textures_type] = textures.get(texturesType)
 			elif textures_type.find('mask') > -1:
 				mask_maps[textures_type] = textures.get(texturesType)
+		elif os.path.exists(texture_file.replace(".dds", ".png")):
+			if textures_type.find('albedo') > -1:
+				albedo_maps[textures_type] = textures.get(texturesType)
+			elif textures_type.find('normal') > -1:
+				normal_maps[textures_type] = textures.get(texturesType)
+			elif textures_type.find('mask') > -1:
+				mask_maps[textures_type] = textures.get(texturesType)
 
 	
 
@@ -245,6 +252,22 @@ def consturct_materials(texture_dir, material):
 			albedo_nodes.append(albedo_image)
 			albedo_image.location = 0,i*-60
 			albedo_image.image = bpy.data.images.load(texture_file)
+			albedo_image.hide = True
+			if i > 0:
+				albedo_image.label = "g_AlbedoMap" + str(i-1)
+			else:
+				albedo_image.label = "g_AlbedoMap"
+
+			if i > 0:
+				mixRGB_shader = nodes.new(type='ShaderNodeMixRGB')
+				albedo_mixRGB_nodes.append(mixRGB_shader)
+				mixRGB_shader.location = 300,(i-1)*-60
+				mixRGB_shader.hide = True
+		elif os.path.exists(texture_file.replace(".dds", ".png")):
+			albedo_image = nodes.new(type='ShaderNodeTexImage')
+			albedo_nodes.append(albedo_image)
+			albedo_image.location = 0,i*-60
+			albedo_image.image = bpy.data.images.load(texture_file.replace(".dds", ".png"))
 			albedo_image.hide = True
 			if i > 0:
 				albedo_image.label = "g_AlbedoMap" + str(i-1)
@@ -299,6 +322,28 @@ def consturct_materials(texture_dir, material):
 				mask_invert_nodes.append(invert_shader)
 				invert_shader.location = 600, ((len(albedo_maps)+1)*-60)-i*60
 				invert_shader.hide = True
+		elif os.path.exists(texture_file.replace(".dds", ".png")):
+			mask_image = nodes.new(type='ShaderNodeTexImage')
+			mask_nodes.append(mask_image)
+			mask_image.location = 0, ((len(albedo_maps)+1)*-60)-i*60
+			mask_image.image = bpy.data.images.load(texture_file.replace(".dds", ".png"))
+			mask_image.image.colorspace_settings.name = 'Non-Color'
+			mask_image.hide = True
+			if i > 0:
+				mask_image.label = "g_MaskMap" + str(i-1)
+			else:
+				mask_image.label = "g_MaskMap"
+
+			if 'Hair' not in material['Shader_Name']:
+				sepRGB_shader = nodes.new(type="ShaderNodeSeparateRGB")
+				mask_sepRGB_nodes.append(sepRGB_shader)
+				sepRGB_shader.location = 300, ((len(albedo_maps)+1)*-60)-i*60
+				sepRGB_shader.hide = True
+				
+				invert_shader = nodes.new(type="ShaderNodeInvert")
+				mask_invert_nodes.append(invert_shader)
+				invert_shader.location = 600, ((len(albedo_maps)+1)*-60)-i*60
+				invert_shader.hide = True
 	#Mask Links
 	if len(mask_nodes) > 0:
 		if 'Hair' not in material['Shader_Name']:
@@ -319,6 +364,23 @@ def consturct_materials(texture_dir, material):
 			normal_nodes.append(normal_image)
 			normal_image.location = 0, ((len(albedo_maps)+1)*-60) + ((len(mask_maps)+1)*-60)-i*60
 			normal_image.image = bpy.data.images.load(texture_file)
+			normal_image.image.colorspace_settings.name = 'Non-Color'
+			normal_image.hide = True
+			if i > 0:
+				normal_image.label = "g_NormalMap" + str(i-1)
+			else:
+				normal_image.label = "g_NormalMap"
+
+			if i > 0:
+				n_mixRGB_shader = nodes.new(type='ShaderNodeMixRGB')
+				normal_mixRGB_nodes.append(n_mixRGB_shader)
+				n_mixRGB_shader.location = 300, ((len(albedo_maps)+1)*-60) + ((len(mask_maps)+1)*-60)-(i-1)*60
+				n_mixRGB_shader.hide = True
+		elif os.path.exists(texture_file.replace(".dds", ".png")):
+			normal_image = nodes.new(type='ShaderNodeTexImage')
+			normal_nodes.append(normal_image)
+			normal_image.location = 0, ((len(albedo_maps)+1)*-60) + ((len(mask_maps)+1)*-60)-i*60
+			normal_image.image = bpy.data.images.load(texture_file.replace(".dds", ".png"))
 			normal_image.image.colorspace_settings.name = 'Non-Color'
 			normal_image.hide = True
 			if i > 0:
@@ -515,13 +577,29 @@ def get_wmb_material(wmb, texture_dir):
 				try:
 					texture_stream = wmb.wta.getTextureByIdentifier(identifier,wmb.wtp_fp)
 					if texture_stream:
-						if not os.path.exists("%s\%s.dds" %(texture_dir, identifier)):
-							create_dir(texture_dir)
-							texture_fp = open("%s\%s.dds" %(texture_dir, identifier), "wb")
-							print('[+] dumping %s.dds'% identifier)
-							texture_fp.write(texture_stream)
-							texture_fp.close()
-				except:
+						if not texture_stream[1]:
+							if not os.path.exists("%s\%s.dds" %(texture_dir, identifier)) or True: # debug always happen
+								create_dir(texture_dir)
+								texture_fp = open("%s\%s.dds" %(texture_dir, identifier), "wb")
+								print('[+] dumping %s.dds'% identifier)
+								texture_fp.write(texture_stream[0])
+								texture_fp.close()
+						else: # Astral Chain ASTC
+							if not os.path.exists("%s\%s.astc" %(texture_dir, identifier)) or True: # debug always happen
+								import subprocess
+								create_dir(texture_dir)
+								texture_fp = open("%s\%s.astc" %(texture_dir, identifier), "wb")
+								print('[+] dumping %s.astc'% identifier)
+								texture_fp.write(texture_stream[0])
+								texture_fp.close()
+								script_file = os.path.realpath(__file__)
+								directory = os.path.dirname(script_file)
+								print("[#] converting astc file to png")
+								appPath = os.path.join(directory, "astcenc-avx2.exe")
+								result = subprocess.run([appPath, "-ds", os.path.join(texture_dir, f"{identifier}.astc"), os.path.join(texture_dir, f"{identifier}.png")], cwd=directory)
+								print('[+] dumped %s.png'% identifier)
+				except Exception as e:
+					raise e
 					continue
 			materials.append([material_name,textures,uniforms,shader_name,technique_name,parameterGroups])
 	else:
@@ -574,17 +652,10 @@ def import_wmb_boundingbox(wmb):
 	bpy.context.scene['boundingBoxXYZ'] = boundingBoxXYZ
 	bpy.context.scene['boundingBoxUVW'] = boundingBoxUVW
 
-def main(only_extract, wmb_file = os.path.split(os.path.realpath(__file__))[0] + '\\test\\pl0000.dtt\\pl0000.wmb'):
+def main(wmb_file = os.path.split(os.path.realpath(__file__))[0] + '\\test\\pl0000.dtt\\pl0000.wmb'):
 	#reset_blend()
 	wmb = WMB3(wmb_file)
 	wmbname = wmb_file.split('\\')[-1]
-
-	if only_extract:
-		texture_dir = wmb_file.replace(wmbname, '\\textures\\')
-		wmb_materials = get_wmb_material(wmb, texture_dir)
-		print('Extraction finished. ;)')
-		return {'FINISHED'}
-
 	collection_name = wmbname[:-4]
 
 	col = bpy.data.collections.new(collection_name)
