@@ -29,7 +29,7 @@ While the model format and much of the .DAT/.DTT format are similar, if not iden
 
 <br>
 ![Sword Legion](https://user-images.githubusercontent.com/31020729/113498031-19a6f000-94be-11eb-9092-45f519d64c57.png)
-<br>
+
 * Some useful folders in pkz [(main documentation here)](https://cabalex.github.io/astral-chain-romfs/romfs/index.html)<br>
     /pl -> human models<br>
     /wp -> weapon models<br>
