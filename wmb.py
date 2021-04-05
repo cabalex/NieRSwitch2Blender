@@ -408,6 +408,9 @@ class WMB3(object):
 		if wta_fp:
 			self.wta = WTA(wta_fp)
 			wta_fp.close()
+			if self.wta.textureHeader_metadata:
+				with open(os.path.join(os.path.dirname(wmb_file), 'ac_wta_header.metadata'), 'wb') as texMetadata:
+					texMetadata.write(self.wta.textureHeader_metadata)
 		self.wmb3_header = WMB_Header(wmb_fp)
 		self.hasBone = False
 		if self.wmb3_header.boneCount > 0:
@@ -666,6 +669,9 @@ def main(arg, wmb_fp, wta_fp, wtp_fp, dump):
 	if wta_fp:
 		wta = WTA(wta_fp)
 		wta_fp.close()
+		if self.wta.textureHeader_metadata:
+			with open(os.path.join(os.path.dirname(wmb_file), 'ac_wta_header.metadata'), 'wb') as texMetadata:
+				texMetadata.write(self.wta.textureHeader_metadata)
 	if dump:
 		obj_file = arg.split('\\')[-1].replace('.wmb','')
 		export_obj(wmb, wta, wtp_fp, obj_file)

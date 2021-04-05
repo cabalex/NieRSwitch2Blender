@@ -129,7 +129,7 @@ def getImageData(texture, imageData, arrayLevel:int, mipLevel:int, depthLevel:in
 		numDepth = texture.depth
 	else:
 		numDepth = 1
-	linesPerBlockHeight = (1 << int(blockHeightLog2)) * 8 # definitely wrong
+	linesPerBlockHeight = (1 << int(blockHeightLog2)) * 8
 	arrayOffset = 0
 	for depthLevel in range(numDepth):
 		for arrayLevel in range(texture.arrayCount):
@@ -159,6 +159,62 @@ def getImageData(texture, imageData, arrayLevel:int, mipLevel:int, depthLevel:in
 					pitch = round_up(width__ * bpp, 64)
 					surfaceSize += pitch * round_up(height__, max(1, blockHeight >> blockHeightShift) * 8)
 					result = deswizzle(width, height, depth, blkWidth, blkHeight, blkDepth, target, bpp, tileMode, max(0, blockHeightLog2 - blockHeightShift), data_)
+
+					# the program creates a copy and uses that to remove unneeded data
+					# yeah, i'm not doing that
+					return result
+				except Exception as e:
+					print(f"Failed to swizzle texture! {e}")
+					return False
+			arrayOffset += len(imageData) / texture.arrayCount
+	return False
+
+def compressImageData(texture, imageData, arrayLevel:int, mipLevel:int, depthLevel:int, blockHeightLog2, target=1, linearTileMode=False):
+	bpp = formatTable[texture._format][0]
+	blkWidth = formatTable[texture._format][1]
+	blkHeight = formatTable[texture._format][2]
+	blkDepth = formatTable[texture._format][3]
+	blockHeight = DIV_ROUND_UP(texture.height, blkHeight)
+	pitch = 0
+	dataAlignment = 512
+	if linearTileMode:
+		tileMode = 1
+	else:
+		tileMode = 0
+	if texture.depth > 1:
+		numDepth = texture.depth
+	else:
+		numDepth = 1
+	linesPerBlockHeight = (1 << int(blockHeightLog2)) * 8
+	arrayOffset = 0
+	for depthLevel in range(numDepth):
+		for arrayLevel in range(texture.arrayCount):
+			surfaceSize = 0
+			blockHeightShift = 0
+			mipOffsets = []
+			for mipLevel in range(texture.mipCount):
+				width = max(1, texture.width >> mipLevel)
+				height = max(1, texture.height >> mipLevel)
+				depth = max(1, texture.depth >> mipLevel)
+				size = DIV_ROUND_UP(width, blkWidth) * DIV_ROUND_UP(height, blkHeight) * bpp
+				if pow2_round_up(DIV_ROUND_UP(height, blkWidth)) < linesPerBlockHeight:
+					blockHeightShift += 1
+				width__ = DIV_ROUND_UP(width, blkWidth)
+				height__ = DIV_ROUND_UP(height, blkHeight)
+
+				# calculate the mip size instead
+				alignedData = bytearray(round_up(surfaceSize, dataAlignment) - surfaceSize)
+				surfaceSize += len(alignedData)
+				mipOffsets.append(surfaceSize)
+
+				# get the first mip offset and current one and the total image size
+				msize = int((mipOffsets[0] + len(imageData) - mipOffsets[mipLevel]) / texture.arrayCount)
+				
+				data_ = subArray(imageData, arrayOffset + mipOffsets[mipLevel], msize)
+				try:
+					pitch = round_up(width__ * bpp, 64)
+					surfaceSize += pitch * round_up(height__, max(1, blockHeight >> blockHeightShift) * 8)
+					result = swizzle(width, height, depth, blkWidth, blkHeight, blkDepth, target, bpp, tileMode, max(0, blockHeightLog2 - blockHeightShift), data_)
 
 					# the program creates a copy and uses that to remove unneeded data
 					# yeah, i'm not doing that

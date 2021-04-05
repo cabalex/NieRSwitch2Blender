@@ -11,7 +11,7 @@ class DDSHeader(object):
 		def __init__(self, pixelFormat):
 			self.size = 32
 			self.flags = 4 # contains fourcc
-			self.fourCC = b'DXT4' # Blender supports DXT1, DXT3, DXT5 [probably make this detected by something oops]
+			self.fourCC = b'DXT5' # Blender supports DXT1, DXT3, DXT5 [probably make this detected by something oops]
 			# "DXT1 for normal texture, DX5 with alpha" [DXT5 reccommended]
 			# I guess my textures are invalid?? If I load them compressed then Blender just crashes
 			# but they work uncompressed (setting fourCC to something invalid) for some reason
@@ -32,7 +32,7 @@ class DDSHeader(object):
 		else:
 			self.pitchOrLinearSize = int(max(1, ((texture.width+3)/4) ) * returnFormatTable(texture._format)[0]) # https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
 		self.depth = texture.depth
-		self.mipmapCount = texture.mipCount
+		self.mipmapCount = 1#texture.mipCount # Setting this to the normal value breaks everything, don't do that
 		self.reserved1 = [0x00000000] * 11
 		self.ddspf = self.DDSPixelFormat(texture)
 		self.caps = 4198408 # Defaults (DDSCAPS_TEXTURE) + mipmap and complex
@@ -72,8 +72,8 @@ class AstralChainTexture(object):
 		self.imageSize = [unpacked[2], unpacked[3]]
 		self.headerSize = unpacked[4]
 		self.mipCount = unpacked[5]
-		_typeval = unpacked[6]
-		_formatval = unpacked[7]
+		self._typeval = unpacked[6]
+		self._formatval = unpacked[7]
 		self.width = unpacked[8]
 		self.height = unpacked[9]
 		self.depth = unpacked[10]
@@ -82,18 +82,22 @@ class AstralChainTexture(object):
 		self.textureLayout2 = unpacked[13]
 		self.arrayCount = 1
 		surfaceTypes = ["T_1D", "T_2D", "T_3D", "T_Cube", "T_1D_Array", "T_2D_Array", "T_2D_Multisample", "T_2D_Multisample_Array", "T_Cube_Array"]
-		self._format = formats[_formatval]
-		self._type = surfaceTypes[_typeval]
+		self._format = formats[self._formatval]
+		self._type = surfaceTypes[self._typeval]
 		if self._type in ["T_Cube", "T_Cube_Array"]:
 			self.ArrayCount = 6
+
+	def save(self):
+		return [pack("<4s13I", self.magic, self.unknown, self.imageSize[0], self.imageSize[1], self.headerSize, self.mipCount, self._typeval,
+			self._formatval, self.width, self.height, self.depth, self.unknown4, self.textureLayout, self.textureLayout2), self.identifier]
 
 	def getImageData(self, textureData):
 		blockHeightLog2 = self.textureLayout & 7
 		texture = getImageData(self, textureData, 0, 0, 0, blockHeightLog2, 1)
 		print(f"Loaded texture {self.identifier} ({self._format})")
 		if self._format.startswith("ASTC"): # Texture is ASTC
-			print(f"! Warning: This texture ({self.identifier}) is ASTC, and hence must be converted to be used in Blender.")
-			print("Since I can't currently find any ASTC to DXT5 converters, it will be converted to PNG. This may cause issues down the line.")
+			print(f"[!] This texture ({self.identifier}) is ASTC, and hence must be converted to be used in Blender.")
+			print("[!] This ASTC texture will be converted to PNG. This may cause issues down the line.")
 			formatInfo = returnFormatTable(self._format)
 			outBuffer = b''.join([
 						b'\x13\xAB\xA1\x5C', formatInfo[1].to_bytes(1, "little"),
@@ -148,10 +152,25 @@ class WTA(object):
 				
 				self.ACTextures = []
 				for i in range(self.textureCount):
-					tex = AstralChainTexture(unpack("14I", wta_fp.read(56)))
+					tex = AstralChainTexture(unpack("<4s13I", wta_fp.read(56)))
 					tex.identifier = self.wtaTextureIdentifier[i]
 					self.ACTextures.append(tex)
 				self.pointer2 = hex(wta_fp.tell())
+				self.textureHeader_metadata = b'' # This may need to change in the future
+				"""
+				ac_texture_header.metadata -
+				- texture identifier offset
+				- number of textures
+				> WTA texture header table
+				> WTA texture identifier table
+				"""
+				textureOutputs = [t.save() for t in self.ACTextures]
+				for i in range(self.textureCount):
+					self.textureHeader_metadata += textureOutputs[i][0] # Might need to save file name?
+				textureNameOffset = len(self.textureHeader_metadata) + 4
+				for i in range(self.textureCount):
+					self.textureHeader_metadata += pack("8s", bytes(textureOutputs[i][1], 'ascii'))
+				self.textureHeader_metadata = pack("<2I", textureNameOffset, self.textureCount) + self.textureHeader_metadata
 			else:
 				while unknownval:
 					self.unknownArray2.append(to_int(unknownval))
