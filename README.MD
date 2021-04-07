@@ -1,10 +1,10 @@
-![Nier2Blender](https://user-images.githubusercontent.com/54476280/64488614-519a7280-d24a-11e9-8627-784cdc5ac3de.png)
+![AstralChain2Blender](https://user-images.githubusercontent.com/31020729/113838468-a31b2400-9743-11eb-854a-b348fadf3963.png)
 <br>
-Note that [WoefulWolf's Blender2NieR](https://github.com/WoefulWolf/Blender2NieR) add-on is NOT compatible with this fork- **[You must use my Blender2NieR fork instead.](https://github.com/cabalex/Blender2NieR)**
+Want to import models back into the game? **[The exporter is here.](https://github.com/cabalex/Blender2NieR)**
 
 <br>
 
-Fork of WoefulWolf's [Nier2Blender 2.8](https://github.com/WoefulWolf/NieR2Blender_2_8) repository that adds Astral Chain support (I guess you could call it AstralChain2Blender?)
+Fork of WoefulWolf's [Nier2Blender 2.8](https://github.com/WoefulWolf/NieR2Blender_2_8) repository that adds Astral Chain support.
 
 <br>
 
@@ -16,15 +16,14 @@ There are some other differences (the last file table in the .WTA, the way .DAT/
 
 
 ## Notable things
-* Some Astral Chain models have DDS textures on them, most notably being the Legion's police branding. This add-on allows these DDS textures to load, however it sets the mipmap count to 1 (any more and Blender/other image editors will crash). This is probably because the mip map count in the WTA and the actual mip map count can be completely inaccurate, causing many programs that load DDS files to try and read parts of the file that aren't there, causing a crash. I'm not entirely sure why the mip map counts are desynced, but this fix will probably break mipmaps in the exporter for now.
-* The add-on converts the ASTC textures to PNG. The only encoder/decoder I could find that converts from ASTC to DDS only converts to DX10, which Blender and the game do not support. There's probably a better method out there, but I just haven't found one. This may cause issues with mipmaps later down the line, however (although I'm fairly certain the EXE included can encode ASTC mipmaps dynamically).
+* Some Astral Chain models have DDS textures on them, most notably being the Legion's police branding. This add-on allows these DDS textures to load, however it sets the mipmap count to 1 (any more and Blender/other image editors will crash). This is probably because the mip map count in the WTA and the actual mip map count can be completely inaccurate, causing many programs that load DDS files to try and read parts of the file that aren't there, causing a crash. I'm not entirely sure why the mip map counts are desynced, but this shouldn't affect much as the exporter is built around this.
+* The add-on converts the ASTC textures to PNG. DDS would have been ideal for all textures, but the ASTC encoder only supports decoding to DX10, which Blender and the game do not support.
 * I include `astcenc-avx2.exe` from the [ASTC Encoder](https://github.com/ARM-software/astc-encoder) for decoding ASTC textures, which might not be compatible with many systems. If it doesn't work, you can try replacing the EXE with one that does. The EXE is called in `wmb_importer.py` around line ~598.
-* Exporting to OBJ/FBX "works", but I have not modified the existing code there. It probably needs to be changed to include PNG support, but it doesn't throw any errors in my testing (?). 
-* I rely on some libraries that probably don't need to be imported.
+* Exporting to OBJ/FBX "works", but I have not modified the existing code there. It probably needs to be changed to include PNG support, but it doesn't throw any errors in my testing (?).
 * This addon should still work with NieR models, but I'm not completely sure as I do not own NieR.
-* My code probably isn't that great, and is definitely not optimized. Sorry :/
 
 ### Some credits/ported code
+* [WoefulWolf](https://github.com/WoefulWolf) and other contributors to [Nier2Blender](https://github.com/WoefulWolf/NieR2Blender_2_8)
 * [aboood40091's BNTX-Extractor](https://github.com/aboood40091/BNTX-Extractor)
 * [KillzXGaming's Switch Toolbox](https://github.com/KillzXGaming/Switch-Toolbox)
 * The [ASTC Encoder](https://github.com/ARM-software/astc-encoder) included
