@@ -1,11 +1,11 @@
 bl_info = {
-    "name": "NieR2Blender (NieR:Automata Model Importer)",
-    "author": "Woeful_Wolf (Original by C4nf3ng)",
+    "name": "AstralChain2Blender (Astral Chain Model Importer)",
+    "author": "Cabalex and Woeful_Wolf (Original by C4nf3ng)",
     "version": (2, 2),
     "blender": (2, 80, 0),
     "api": 38019,
     "location": "File > Import-Export",
-    "description": "Import Nier:Automata Model Data",
+    "description": "Import Astral Chain Model Data",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
@@ -16,8 +16,8 @@ import os
 from bpy_extras.io_utils import ExportHelper,ImportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 
-class ImportNier2blender(bpy.types.Operator, ImportHelper):
-    '''Load a Nier:Automata WMB File.'''
+class ImportAstralChain(bpy.types.Operator, ImportHelper):
+    '''Load an Astral Chain WMB File.'''
     bl_idname = "import.wmb_data"
     bl_label = "Import WMB Data"
     bl_options = {'PRESET'}
@@ -32,8 +32,8 @@ class ImportNier2blender(bpy.types.Operator, ImportHelper):
             wmb_importer.reset_blend()
         return wmb_importer.main(self.filepath)
 
-class ImportDATNier2blender(bpy.types.Operator, ImportHelper):
-    '''Load a Nier:Automata DTT (and DAT) File.'''
+class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
+    '''Load an Astral Chain DTT (and DAT) File.'''
     bl_idname = "import.dtt_data"
     bl_label = "Import DTT (and DAT) Data"
     bl_options = {'PRESET'}
@@ -57,7 +57,7 @@ class ImportDATNier2blender(bpy.types.Operator, ImportHelper):
                         tail = os.path.split(filepath)[1]
                         tailless_tail = tail[:-4]
                         dat_filepath = head + '\\' + tailless_tail + '.dat'
-                        extract_dir = head + '\\nier2blender_extracted'
+                        extract_dir = head + '\\astralchain2blender_extracted'
                         from . import dat_unpacker
                         if os.path.isfile(dat_filepath):
                             dat_unpacker.main(dat_filepath, extract_dir + '\\' + tailless_tail + '.dat', dat_filepath)   # dat
@@ -80,7 +80,7 @@ class ImportDATNier2blender(bpy.types.Operator, ImportHelper):
             tail = os.path.split(self.filepath)[1]
             tailless_tail = tail[:-4]
             dat_filepath = head + '\\' + tailless_tail + '.dat'
-            extract_dir = head + '\\nier2blender_extracted'
+            extract_dir = head + '\\astralchain2blender_extracted'
             from . import dat_unpacker
             if os.path.isfile(dat_filepath):
                 dat_unpacker.main(dat_filepath, extract_dir + '\\' + tailless_tail + '.dat', dat_filepath)   # dat
@@ -99,20 +99,20 @@ class ImportDATNier2blender(bpy.types.Operator, ImportHelper):
 # Registration
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportNier2blender.bl_idname, text="WMB File for Nier:Automata (.wmb)")
+    self.layout.operator(ImportAstralChain.bl_idname, text="WMB File for Astral Chain (.wmb)")
 
 def menu_func_import_dat(self, context):
-    self.layout.operator(ImportDATNier2blender.bl_idname, text="DTT File for Nier:Automata (.dtt)")
+    self.layout.operator(ImportDATAstralChain.bl_idname, text="DTT File for Astral Chain (.dtt)")
 
 def register():
-    bpy.utils.register_class(ImportNier2blender)
-    bpy.utils.register_class(ImportDATNier2blender)
+    bpy.utils.register_class(ImportAstralChain)
+    bpy.utils.register_class(ImportDATAstralChain)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
     bpy.types.TOPBAR_MT_file_import.append(menu_func_import_dat)
 
 def unregister():
-    bpy.utils.unregister_class(ImportNier2blender)
-    bpy.utils.unregister_class(ImportDATNier2blender)
+    bpy.utils.unregister_class(ImportAstralChain)
+    bpy.utils.unregister_class(ImportDATAstralChain)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
     bpy.types.TOPBAR_MT_file_import.remove(menu_func_import_dat)
 
