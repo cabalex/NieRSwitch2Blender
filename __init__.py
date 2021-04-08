@@ -18,7 +18,7 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty
 
 class ImportAstralChain(bpy.types.Operator, ImportHelper):
     '''Load an Astral Chain WMB File.'''
-    bl_idname = "import.wmb_data"
+    bl_idname = "import.wmb_data_ac"
     bl_label = "Import WMB Data"
     bl_options = {'PRESET'}
     filename_ext = ".wmb"
@@ -34,7 +34,7 @@ class ImportAstralChain(bpy.types.Operator, ImportHelper):
 
 class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
     '''Load an Astral Chain DTT (and DAT) File.'''
-    bl_idname = "import.dtt_data"
+    bl_idname = "import.dtt_data_ac"
     bl_label = "Import DTT (and DAT) Data"
     bl_options = {'PRESET'}
     filename_ext = ".dtt"
@@ -98,23 +98,23 @@ class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
 
 # Registration
 
-def menu_func_import(self, context):
+def ac_menu_func_import(self, context):
     self.layout.operator(ImportAstralChain.bl_idname, text="WMB File for Astral Chain (.wmb)")
 
-def menu_func_import_dat(self, context):
+def ac_menu_func_import_dat(self, context):
     self.layout.operator(ImportDATAstralChain.bl_idname, text="DTT File for Astral Chain (.dtt)")
 
 def register():
     bpy.utils.register_class(ImportAstralChain)
     bpy.utils.register_class(ImportDATAstralChain)
-    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
-    bpy.types.TOPBAR_MT_file_import.append(menu_func_import_dat)
+    bpy.types.TOPBAR_MT_file_import.append(ac_menu_func_import)
+    bpy.types.TOPBAR_MT_file_import.append(ac_menu_func_import_dat)
 
 def unregister():
     bpy.utils.unregister_class(ImportAstralChain)
     bpy.utils.unregister_class(ImportDATAstralChain)
-    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
-    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import_dat)
+    bpy.types.TOPBAR_MT_file_import.remove(ac_menu_func_import)
+    bpy.types.TOPBAR_MT_file_import.remove(ac_menu_func_import_dat)
 
 
 if __name__ == '__main__':
