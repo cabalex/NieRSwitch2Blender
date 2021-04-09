@@ -78,6 +78,9 @@ class wmb3_vertex(object):
 		if vertex_flags in [1, 4, 5, 12, 14]:
 			self.textureU2 = to_float16(wmb_fp.read(2))				
 			self.textureV2 = to_float16(wmb_fp.read(2))
+		else:
+			self.textureU2 = 0			
+			self.textureV2 = 0
 		if vertex_flags in [7, 10, 11]:										
 			self.boneIndices = [to_int(wmb_fp.read(1)) for i in range(4)]									
 			self.boneWeights = [to_int(wmb_fp.read(1))/255 for i in range(4)]
