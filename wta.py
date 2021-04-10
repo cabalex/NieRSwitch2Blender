@@ -97,7 +97,6 @@ class AstralChainTexture(object):
 		print(f"Loaded texture {self.identifier} ({self._format})")
 		if self._format.startswith("ASTC"): # Texture is ASTC
 			print(f"[!] This texture ({self.identifier}) is ASTC, and hence must be converted to be used in Blender.")
-			print("[!] This ASTC texture will be converted to PNG. This may cause issues down the line.")
 			formatInfo = returnFormatTable(self._format)
 			outBuffer = b''.join([
 						b'\x13\xAB\xA1\x5C', formatInfo[1].to_bytes(1, "little"),

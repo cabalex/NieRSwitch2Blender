@@ -458,8 +458,11 @@ def format_wmb_mesh(wmb, collection_name):
 		if vertex_flags in [0]:
 			uv = [(vertex.textureU, 1 - vertex.textureV) for vertex in wmb.vertexGroupArray[vertexGroupIndex].vertexArray]
 			uvMaps[0].append(uv)
-			uv = [(vertex.textureU2, 1 - vertex.textureV2) for vertex in wmb.vertexGroupArray[vertexGroupIndex].vertexArray]
-			uvMaps[1].append(uv)
+			try:
+				uv = [(vertex.textureU2, 1 - vertex.textureV2) for vertex in wmb.vertexGroupArray[vertexGroupIndex].vertexArray]
+				uvMaps[1].append(uv)
+			except AttributeError:  # May not always have a second UV
+				uvMaps[1].append(None)
 			uvMaps[2].append(None)
 			uvMaps[3].append(None)
 			uvMaps[4].append(None)
