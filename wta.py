@@ -28,7 +28,7 @@ class DDSHeader(object):
 		self.height = texture.height
 		self.width = texture.width
 		if texture._format == "R8G8B8A8_UNORM":
-			self.pitchOrLinearSize = ((width + 1) >> 1) * 4
+			self.pitchOrLinearSize = ((texture.width + 1) >> 1) * 4
 		else:
 			self.pitchOrLinearSize = int(max(1, ((texture.width+3)/4) ) * returnFormatTable(texture._format)[0]) # https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
 		self.depth = texture.depth
