@@ -11,7 +11,10 @@ class DDSHeader(object):
 		def __init__(self, pixelFormat):
 			self.size = 32
 			self.flags = 4 # contains fourcc
-			self.fourCC = b'DXT5' # Blender supports DXT1, DXT3, DXT5 [probably make this detected by something oops]
+			if pixelFormat._format == "BC6H_UF16":
+				self.fourCC = b'DX10'
+			else:
+				self.fourCC = b'DXT5' # Blender supports DXT1, DXT3, DXT5 [probably make this detected by something oops]
 			# "DXT1 for normal texture, DX5 with alpha" [DXT5 reccommended]
 			# I guess my textures are invalid?? If I load them compressed then Blender just crashes
 			# but they work uncompressed (setting fourCC to something invalid) for some reason
@@ -27,10 +30,11 @@ class DDSHeader(object):
 		self.flags = 0x1 + 0x2 + 0x4 + 0x1000 + 0x20000 + 0x80000 # Defaults (caps, height, width, pixelformat) + mipmapcount and linearsize
 		self.height = texture.height
 		self.width = texture.width
-		if texture._format == "R8G8B8A8_UNORM":
-			self.pitchOrLinearSize = ((texture.width + 1) >> 1) * 4
+		self._format = texture._format
+		if self._format == "R8G8B8A8_UNORM":
+			self.pitchOrLinearSize = ((width + 1) >> 1) * 4
 		else:
-			self.pitchOrLinearSize = int(max(1, ((texture.width+3)/4) ) * returnFormatTable(texture._format)[0]) # https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
+			self.pitchOrLinearSize = int(max(1, ((self.width+3)/4) ) * returnFormatTable(self._format)[0]) # https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
 		self.depth = texture.depth
 		self.mipmapCount = 1#texture.mipCount # Setting this to the normal value breaks everything, don't do that
 		self.reserved1 = [0x00000000] * 11
@@ -42,11 +46,14 @@ class DDSHeader(object):
 		self.reserved2 = 0
 
 	def save(self):
-		return self.magic + pack("20I4s10I", self.size, self.flags, self.height, self.width, self.pitchOrLinearSize, self.depth,
+		output = self.magic + pack("20I4s10I", self.size, self.flags, self.height, self.width, self.pitchOrLinearSize, self.depth,
 			self.mipmapCount, self.reserved1[0], self.reserved1[1], self.reserved1[2], self.reserved1[3], self.reserved1[4],
 			self.reserved1[5], self.reserved1[6], self.reserved1[7], self.reserved1[8], self.reserved1[9], self.reserved1[10],
 			self.ddspf.size, self.ddspf.flags, self.ddspf.fourCC, self.ddspf.RGBBitCount, self.ddspf.RBitMask, self.ddspf.GBitMask,
 			self.ddspf.BBitMask, self.ddspf.ABitMask, self.caps, self.caps2, self.caps3, self.caps4, self.reserved2)
+		if self._format == "BC6H_UF16":
+			output += bytearray(b"\x5F\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00")
+		return output
 
 
 class AstralChainTexture(object):

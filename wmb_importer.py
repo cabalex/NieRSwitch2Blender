@@ -601,6 +601,7 @@ def get_wmb_material(wmb, texture_dir):
 								appPath = os.path.join(directory, "astcenc-avx2.exe")
 								result = subprocess.run([appPath, "-ds", os.path.join(texture_dir, f"{identifier}.astc"), os.path.join(texture_dir, f"{identifier}.png")], cwd=directory)
 								print('[+] dumped %s.png'% identifier)
+								os.remove("%s\%s.astc" %(texture_dir, identifier))
 				except Exception as e:
 					raise e
 					continue

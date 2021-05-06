@@ -170,10 +170,7 @@ def getImageData(texture, imageData, arrayLevel:int, mipLevel:int, depthLevel:in
 	return False
 
 def compressImageData(texture, imageData, arrayLevel:int, mipLevel:int, depthLevel:int, blockHeightLog2, target=1, linearTileMode=False):
-	bpp = formatTable[texture._format][0]
-	blkWidth = formatTable[texture._format][1]
-	blkHeight = formatTable[texture._format][2]
-	blkDepth = formatTable[texture._format][3]
+	bpp, blkWidth, blkHeight, blkDepth = formatTable[texture._format]
 	blockHeight = DIV_ROUND_UP(texture.height, blkHeight)
 	pitch = 0
 	dataAlignment = 512

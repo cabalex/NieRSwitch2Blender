@@ -17,7 +17,7 @@ There are some other differences (the last file table in the .WTA, the way .DAT/
 
 ## Notable things
 * Some Astral Chain models have DDS textures on them, most notably being the Legion's police branding. This add-on allows these DDS textures to load, however it sets the mipmap count to 1 (any more and Blender/other image editors will crash). This is probably because the mip map count in the WTA and the actual mip map count can be completely inaccurate, causing many programs that load DDS files to try and read parts of the file that aren't there, causing a crash. I'm not entirely sure why the mip map counts are desynced, but this shouldn't affect much as the exporter is built around this.
-* The add-on converts the ASTC textures to PNG. DDS would have been ideal for all textures, but the ASTC encoder only supports decoding to DX10, which Blender and the game do not support.
+* The add-on converts the ASTC textures to PNG; keep this in mind when editing.
 * I include `astcenc-avx2.exe` from the [ASTC Encoder](https://github.com/ARM-software/astc-encoder) for decoding ASTC textures, which might not be compatible with many systems. If it doesn't work, you can try replacing the EXE with one that does. The EXE is called in `wmb_importer.py` around line ~598.
 * Exporting to OBJ/FBX "works", but I have not modified the existing code there. It probably needs to be changed to include PNG support, but it doesn't throw any errors in my testing (?).
 * This addon should still work with NieR models, but I'm not completely sure as I do not own NieR.
