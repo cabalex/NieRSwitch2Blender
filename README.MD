@@ -30,7 +30,7 @@ There are some other differences (the last file table in the .WTA, the way .DAT/
 
 <br>![Sword Legion](https://user-images.githubusercontent.com/31020729/113498031-19a6f000-94be-11eb-9092-45f519d64c57.png)
 
-* Some useful folders in pkz [(main documentation here)](https://cabalex.github.io/astral-chain-romfs/romfs/index.html)<br>
+* Some useful folders in pkz [(main documentation here)](https://docs.google.com/spreadsheets/d/1qTOnFUdTfPtXfizpqoj2IbcLhTCJWRiF9MI3N8wiP3U/edit?usp=sharing)<br>
     /pl -> human models<br>
     /wp -> weapon models<br>
     /ba /bg /bh -> environment models<br>
