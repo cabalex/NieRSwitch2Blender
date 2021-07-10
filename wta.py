@@ -13,11 +13,13 @@ class DDSHeader(object):
 			self.flags = 4 # contains fourcc
 			if pixelFormat._format == "BC6H_UF16":
 				self.fourCC = b'DX10'
+			elif pixelFormat._format.startswith("BC1"):
+				self.fourCC = b'DXT1'
+			elif pixelFormat._format.startswith("BC2"):
+				self.fourCC = b'DXT3'
 			else:
-				self.fourCC = b'DXT5' # Blender supports DXT1, DXT3, DXT5 [probably make this detected by something oops]
-			# "DXT1 for normal texture, DX5 with alpha" [DXT5 reccommended]
-			# I guess my textures are invalid?? If I load them compressed then Blender just crashes
-			# but they work uncompressed (setting fourCC to something invalid) for some reason
+				self.fourCC = b'DXT5'
+			# BC1 = DXT1, BC2 = DXT3, above is DXT5 i think; BC6H is the only DX10 format
 			self.RGBBitCount = 0
 			self.RBitMask = 0x00000000
 			self.GBitMask = 0x00000000
@@ -32,7 +34,7 @@ class DDSHeader(object):
 		self.width = texture.width
 		self._format = texture._format
 		if self._format == "R8G8B8A8_UNORM":
-			self.pitchOrLinearSize = ((width + 1) >> 1) * 4
+			self.pitchOrLinearSize = ((self.width + 1) >> 1) * 4
 		else:
 			self.pitchOrLinearSize = int(max(1, ((self.width+3)/4) ) * returnFormatTable(self._format)[0]) # https://docs.microsoft.com/en-us/windows/win32/direct3ddds/dx-graphics-dds-pguide
 		self.depth = texture.depth
@@ -59,6 +61,7 @@ class DDSHeader(object):
 class AstralChainTexture(object):
 	def __init__(self, unpacked):
 		formats = {
+			# DDS
 			0x25: "R8G8B8A8_UNORM",
 			0x42: "BC1_UNORM",
 			0x43: "BC2_UNORM",
@@ -69,6 +72,7 @@ class AstralChainTexture(object):
 			0x48: "BC3_UNORM_SRGB",
 			0x49: "BC4_SNORM",
 			0x50: "BC6H_UF16",
+			# ASTC
 			0x79: "ASTC_4x4_UNORM",
 			0x80: "ASTC_8x8_UNORM",
 			0x87: "ASTC_4x4_SRGB",
@@ -178,6 +182,7 @@ class WTA(object):
 					self.textureHeader_metadata += pack("8s", bytes(textureOutputs[i][1], 'ascii'))
 				self.textureHeader_metadata = pack("<2I", textureNameOffset, self.textureCount) + self.textureHeader_metadata
 			else:
+				print('! Loading a NieR WTA file')
 				self.textureHeader_metadata = False
 				while unknownval:
 					self.unknownArray2.append(to_int(unknownval))

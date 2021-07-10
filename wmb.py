@@ -412,7 +412,6 @@ class WMB3(object):
 		self.wta = 0
 
 		wmb_path = wmb_file
-		print(wmb_path)
 		if not os.path.exists(wmb_path):
 			wmb_path = wmb_file.replace('.dat','.dtt')
 		wtp_path = wmb_file.replace('.dat','.dtt').replace('.wmb','.wtp')
