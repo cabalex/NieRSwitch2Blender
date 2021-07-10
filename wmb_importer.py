@@ -567,45 +567,76 @@ def format_wmb_mesh(wmb, collection_name):
 def get_wmb_material(wmb, texture_dir):
 	materials = []
 	if wmb.wta:
-		for materialIndex in range(len(wmb.materialArray)):
-			material = wmb.materialArray[materialIndex]
-			material_name = material.materialName
-			shader_name = material.effectName
-			technique_name = material.techniqueName
-			uniforms = material.uniformArray
-			textures = material.textureArray
-			parameterGroups = material.parameterGroups
-			for key in textures.keys():
-				identifier = textures[key]
-				try:
-					texture_stream = wmb.wta.getTextureByIdentifier(identifier,wmb.wtp_fp)
-					if texture_stream:
-						if not texture_stream[1]:
-							if not os.path.exists("%s\%s.dds" %(texture_dir, identifier)) or True: # debug always happen
-								create_dir(texture_dir)
-								texture_fp = open("%s\%s.dds" %(texture_dir, identifier), "wb")
-								print('[+] dumping %s.dds'% identifier)
-								texture_fp.write(texture_stream[0])
-								texture_fp.close()
-						else: # Astral Chain ASTC
-							if not os.path.exists("%s\%s.astc" %(texture_dir, identifier)) or True: # debug always happen
-								import subprocess
-								create_dir(texture_dir)
-								texture_fp = open("%s\%s.astc" %(texture_dir, identifier), "wb")
-								print('[+] dumping %s.astc'% identifier)
-								texture_fp.write(texture_stream[0])
-								texture_fp.close()
-								script_file = os.path.realpath(__file__)
-								directory = os.path.dirname(script_file)
-								print("[#] converting astc file to png")
-								appPath = os.path.join(directory, "astcenc-avx2.exe")
-								result = subprocess.run([appPath, "-ds", os.path.join(texture_dir, f"{identifier}.astc"), os.path.join(texture_dir, f"{identifier}.png")], cwd=directory)
-								print('[+] dumped %s.png'% identifier)
-								os.remove("%s\%s.astc" %(texture_dir, identifier))
-				except Exception as e:
-					raise e
-					continue
-			materials.append([material_name,textures,uniforms,shader_name,technique_name,parameterGroups])
+		if hasattr(wmb, 'materialArray'):
+			for materialIndex in range(len(wmb.materialArray)):
+				material = wmb.materialArray[materialIndex]
+				material_name = material.materialName
+				shader_name = material.effectName
+				technique_name = material.techniqueName
+				uniforms = material.uniformArray
+				textures = material.textureArray
+				parameterGroups = material.parameterGroups
+				for textureIndex in range(wmb.wta.textureCount):		# for key in textures.keys():
+					#identifier = textures[key]
+					identifier = wmb.wta.wtaTextureIdentifier[textureIndex]
+					try:
+						texture_stream = wmb.wta.getTextureByIdentifier(identifier,wmb.wtp_fp)
+						if texture_stream:
+							if not texture_stream[1]:
+								if not os.path.exists("%s\%s.dds" %(texture_dir, identifier)): 
+									create_dir(texture_dir)
+									texture_fp = open("%s\%s.dds" %(texture_dir, identifier), "wb")
+									print('[+] dumping %s.dds'% identifier)
+									texture_fp.write(texture_stream[0])
+									texture_fp.close()
+							else: # Astral Chain ASTC
+								if not os.path.exists("%s\%s.astc" %(texture_dir, identifier)):
+									import subprocess
+									create_dir(texture_dir)
+									texture_fp = open("%s\%s.astc" %(texture_dir, identifier), "wb")
+									print('[+] dumping %s.astc'% identifier)
+									texture_fp.write(texture_stream[0])
+									texture_fp.close()
+									script_file = os.path.realpath(__file__)
+									directory = os.path.dirname(script_file)
+									print("[#] converting astc file to png")
+									appPath = os.path.join(directory, "astcenc-avx2.exe")
+									result = subprocess.run([appPath, "-ds", os.path.join(texture_dir, f"{identifier}.astc"), os.path.join(texture_dir, f"{identifier}.png")], cwd=directory)
+									print('[+] dumped %s.png'% identifier)
+									os.remove("%s\%s.astc" %(texture_dir, identifier))
+					except:
+						continue
+				materials.append([material_name,textures,uniforms,shader_name,technique_name,parameterGroups])
+		else:
+			texture_dir = texture_dir.replace('.dat','.dtt')
+			for textureIndex in range(wmb.wta.textureCount):
+				print(textureIndex)
+				identifier = wmb.wta.wtaTextureIdentifier[textureIndex]
+				texture_stream = wmb.wta.getTextureByIdentifier(identifier,wmb.wtp_fp)
+				if texture_stream:
+					if not texture_stream[1]:
+						if not os.path.exists("%s\%s.dds" %(texture_dir, identifier)):
+							create_dir(texture_dir)
+							texture_fp = open("%s\%s.dds" %(texture_dir, identifier), "wb")
+							print('[+] dumping %s.dds'% identifier)
+							texture_fp.write(texture_stream[0])
+							texture_fp.close()
+					else: # Astral Chain ASTC
+						if not os.path.exists("%s\%s.astc" %(texture_dir, identifier)):
+							import subprocess
+							create_dir(texture_dir)
+							texture_fp = open("%s\%s.astc" %(texture_dir, identifier), "wb")
+							print('[+] dumping %s.astc'% identifier)
+							texture_fp.write(texture_stream[0])
+							texture_fp.close()
+							script_file = os.path.realpath(__file__)
+							directory = os.path.dirname(script_file)
+							print("[#] converting astc file to png")
+							appPath = os.path.join(directory, "astcenc-avx2.exe")
+							result = subprocess.run([appPath, "-ds", os.path.join(texture_dir, f"{identifier}.astc"), os.path.join(texture_dir, f"{identifier}.png")], cwd=directory)
+							print('[+] dumped %s.png'% identifier)
+							os.remove("%s\%s.astc" %(texture_dir, identifier))
+
 	else:
 		print('Missing .wta')
 		show_message("Error: Could not open .wta file, textures not imported. Is it missing? (Maybe DAT not extracted?)", 'Could Not Open .wta File', 'ERROR')
@@ -635,7 +666,7 @@ def import_colTreeNodes(wmb, collection):
 		col_Bound = bpy.context.active_object
 		col_Bound.name =  str(index) + "-" + str(node.left) + "-" + str(node.right)
 		bpy.ops.transform.resize(value=(node.p2[0], node.p2[1], node.p2[2]))
-		bpy.ops.transform.rotate(value=math.radians(90), orient_axis='X', center_override=(0, 0, 0))
+		bpy.ops.transform.rotate(value=math.radians(-90), orient_axis='X', center_override=(0, 0, 0))
 		bpy.context.object.display_type = 'BOUNDS'
 		collision_col.objects.link(col_Bound)
 		collection.objects.unlink(col_Bound)
@@ -656,7 +687,7 @@ def import_wmb_boundingbox(wmb):
 	bpy.context.scene['boundingBoxXYZ'] = boundingBoxXYZ
 	bpy.context.scene['boundingBoxUVW'] = boundingBoxUVW
 
-def main(wmb_file = os.path.split(os.path.realpath(__file__))[0] + '\\test\\pl0000.dtt\\pl0000.wmb'):
+def main(only_extract = False, wmb_file = os.path.split(os.path.realpath(__file__))[0] + '\\test\\pl0000.dtt\\pl0000.wmb'):
 	#reset_blend()
 	wmb = WMB3(wmb_file)
 	wmbname = wmb_file.split('\\')[-1]

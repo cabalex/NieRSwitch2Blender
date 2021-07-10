@@ -4,7 +4,7 @@ bl_info = {
     "version": (2, 2),
     "blender": (2, 80, 0),
     "api": 38019,
-    "location": "File > Import-Export",
+    "location": "File > Import",
     "description": "Import Astral Chain Model Data",
     "warning": "",
     "wiki_url": "",
@@ -18,7 +18,7 @@ from bpy.props import StringProperty, BoolProperty, EnumProperty
 
 class ImportAstralChain(bpy.types.Operator, ImportHelper):
     '''Load an Astral Chain WMB File.'''
-    bl_idname = "import.wmb_data_ac"
+    bl_idname = "import_scene.wmb_data_ac"
     bl_label = "Import WMB Data"
     bl_options = {'PRESET'}
     filename_ext = ".wmb"
@@ -30,11 +30,11 @@ class ImportAstralChain(bpy.types.Operator, ImportHelper):
         from . import wmb_importer
         if self.reset_blend:
             wmb_importer.reset_blend()
-        return wmb_importer.main(self.filepath)
+        return wmb_importer.main(False, self.filepath)
 
 class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
     '''Load an Astral Chain DTT (and DAT) File.'''
-    bl_idname = "import.dtt_data_ac"
+    bl_idname = "import_scene.dtt_data_ac"
     bl_label = "Import DTT (and DAT) Data"
     bl_options = {'PRESET'}
     filename_ext = ".dtt"
