@@ -178,10 +178,13 @@ class WTA(object):
 					self.textureHeader_metadata += pack("8s", bytes(textureOutputs[i][1], 'ascii'))
 				self.textureHeader_metadata = pack("<2I", textureNameOffset, self.textureCount) + self.textureHeader_metadata
 			else:
+				self.textureHeader_metadata = False
 				while unknownval:
 					self.unknownArray2.append(to_int(unknownval))
 					unknownval =  (wta_fp.read(4))
 				self.pointer2 = hex(wta_fp.tell())
+		else:
+			print("[!] Invalid WTA file- Perhaps it was formatted or extracted improperly?")
 
 
 	def getTextureByIndex(self, texture_index, texture_fp):
