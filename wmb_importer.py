@@ -579,6 +579,8 @@ def get_wmb_material(wmb, texture_dir):
 				for textureIndex in range(wmb.wta.textureCount):		# for key in textures.keys():
 					#identifier = textures[key]
 					identifier = wmb.wta.wtaTextureIdentifier[textureIndex]
+					if any([os.path.exists("%s\%s.astc" %(texture_dir, identifier)), os.path.exists("%s\%s.png" %(texture_dir, identifier)), os.path.exists("%s\%s.dds" %(texture_dir, identifier))]):
+						continue
 					try:
 						texture_stream = wmb.wta.getTextureByIdentifier(identifier,wmb.wtp_fp)
 						if texture_stream:
@@ -590,7 +592,7 @@ def get_wmb_material(wmb, texture_dir):
 									texture_fp.write(texture_stream[0])
 									texture_fp.close()
 							else: # Astral Chain ASTC
-								if not os.path.exists("%s\%s.astc" %(texture_dir, identifier)):
+								if not os.path.exists("%s\%s.astc" %(texture_dir, identifier)) and not os.path.exists("%s\%s.png" %(texture_dir, identifier)):
 									import subprocess
 									create_dir(texture_dir)
 									texture_fp = open("%s\%s.astc" %(texture_dir, identifier), "wb")
@@ -612,6 +614,8 @@ def get_wmb_material(wmb, texture_dir):
 			for textureIndex in range(wmb.wta.textureCount):
 				print(textureIndex)
 				identifier = wmb.wta.wtaTextureIdentifier[textureIndex]
+				if any([os.path.exists("%s\%s.astc" %(texture_dir, identifier)), os.path.exists("%s\%s.png" %(texture_dir, identifier)), os.path.exists("%s\%s.dds" %(texture_dir, identifier))]):
+					continue
 				texture_stream = wmb.wta.getTextureByIdentifier(identifier,wmb.wtp_fp)
 				if texture_stream:
 					if not texture_stream[1]:
@@ -622,7 +626,7 @@ def get_wmb_material(wmb, texture_dir):
 							texture_fp.write(texture_stream[0])
 							texture_fp.close()
 					else: # Astral Chain ASTC
-						if not os.path.exists("%s\%s.astc" %(texture_dir, identifier)):
+						if not os.path.exists("%s\%s.astc" %(texture_dir, identifier)) and not os.path.exists("%s\%s.png" %(texture_dir, identifier)):
 							import subprocess
 							create_dir(texture_dir)
 							texture_fp = open("%s\%s.astc" %(texture_dir, identifier), "wb")
