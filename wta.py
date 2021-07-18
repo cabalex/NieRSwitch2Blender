@@ -72,6 +72,10 @@ class AstralChainTexture(object):
 			0x48: "BC3_UNORM_SRGB",
 			0x49: "BC4_SNORM",
 			0x50: "BC6H_UF16",
+			# ASTC (weird texture formats ??)
+			0x2D: "ASTC_4x4_UNORM",
+			0x38: "ASTC_8x8_UNORM",
+			0x3A: "ASTC_12x12_UNORM",
 			# ASTC
 			0x79: "ASTC_4x4_UNORM",
 			0x80: "ASTC_8x8_UNORM",
