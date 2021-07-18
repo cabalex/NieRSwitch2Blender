@@ -89,10 +89,11 @@ class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
                 print('DAT not found. Only extracting DTT. (No materials will automatically be imported)')
 
             wtp_filename = dat_unpacker.main(self.filepath, extract_dir + '\\' + tailless_tail + '.dtt', self.filepath)       # dtt
+            # WARNING: If there are other WTP files here, then it will detect the wrong one.
 
-            wmb_filepath = extract_dir + '\\' + tailless_tail + '.dtt\\' + wtp_filename[:-4] + '.wmb'
+            wmb_filepath = extract_dir + '\\' + tailless_tail + '.dtt\\' + tailless_tail + '.wmb'
             if not os.path.exists(wmb_filepath):
-                wmb_filepath = extract_dir + '\\' + tailless_tail + '.dat\\' + wtp_filename[:-4] + '.wmb'                     # if not in dtt, then must be in dat
+                wmb_filepath = extract_dir + '\\' + tailless_tail + '.dat\\' + tailless_tail + '.wmb'                     # if not in dtt, then must be in dat
 
             from . import wmb_importer
             return wmb_importer.main(self.only_extract, wmb_filepath)
