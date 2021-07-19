@@ -224,15 +224,8 @@ def consturct_materials(texture_dir, material):
 	for texturesType in textures.keys():
 		textures_type = texturesType.lower()
 		material[texturesType] = textures.get(texturesType)
-		texture_file = "%s/%s.dds" % (texture_dir, textures[texturesType])
+		texture_file = f"{texture_dir}/{textures[texturesType]}.dds" if os.path.exists(f"{texture_dir}/{textures[texturesType]}.dds") else f"{texture_dir}/{textures[texturesType]}.png"
 		if os.path.exists(texture_file):
-			if textures_type.find('albedo') > -1:
-				albedo_maps[textures_type] = textures.get(texturesType)
-			elif textures_type.find('normal') > -1:
-				normal_maps[textures_type] = textures.get(texturesType)
-			elif textures_type.find('mask') > -1:
-				mask_maps[textures_type] = textures.get(texturesType)
-		elif os.path.exists(texture_file.replace(".dds", ".png")):
 			if textures_type.find('albedo') > -1:
 				albedo_maps[textures_type] = textures.get(texturesType)
 			elif textures_type.find('normal') > -1:
@@ -244,9 +237,10 @@ def consturct_materials(texture_dir, material):
 
 	# Albedo Nodes
 	albedo_nodes = []
+	albedo_uv_nodes = []
 	albedo_mixRGB_nodes = []
 	for i, textureID in enumerate(albedo_maps.values()):
-		texture_file = "%s/%s.dds" % (texture_dir, textureID)
+		texture_file = f"{texture_dir}/{textureID}.dds" if os.path.exists(f"{texture_dir}/{textureID}.dds") else f"{texture_dir}/{textureID}.png"
 		if os.path.exists(texture_file):
 			albedo_image = nodes.new(type='ShaderNodeTexImage')
 			albedo_nodes.append(albedo_image)
@@ -263,22 +257,12 @@ def consturct_materials(texture_dir, material):
 				albedo_mixRGB_nodes.append(mixRGB_shader)
 				mixRGB_shader.location = 300,(i-1)*-60
 				mixRGB_shader.hide = True
-		elif os.path.exists(texture_file.replace(".dds", ".png")):
-			albedo_image = nodes.new(type='ShaderNodeTexImage')
-			albedo_nodes.append(albedo_image)
-			albedo_image.location = 0,i*-60
-			albedo_image.image = bpy.data.images.load(texture_file.replace(".dds", ".png"))
-			albedo_image.hide = True
-			if i > 0:
-				albedo_image.label = "g_AlbedoMap" + str(i-1)
-			else:
-				albedo_image.label = "g_AlbedoMap"
-
-			if i > 0:
-				mixRGB_shader = nodes.new(type='ShaderNodeMixRGB')
-				albedo_mixRGB_nodes.append(mixRGB_shader)
-				mixRGB_shader.location = 300,(i-1)*-60
-				mixRGB_shader.hide = True
+				# UV map node for other textures
+				uv_shader = nodes.new(type='ShaderNodeUVMap')
+				albedo_uv_nodes.append(uv_shader)
+				uv_shader.uv_map = f"UVMap{i+1}"
+				uv_shader.location = -300,i*-60
+				uv_shader.hide = True
 	# Albedo Links
 	if len(albedo_nodes) == 1:
 		albedo_principled = links.new(albedo_nodes[0].outputs['Color'], principled.inputs['Base Color'])
@@ -289,8 +273,12 @@ def consturct_materials(texture_dir, material):
 			for i in range(len(albedo_mixRGB_nodes)):
 				albedo_link = links.new(albedo_nodes[i+1].outputs['Color'], albedo_mixRGB_nodes[i].inputs['Color1'])
 				alpha_link = links.new(albedo_nodes[i].outputs['Alpha'], albedo_mixRGB_nodes[i].inputs['Fac'])
+				# UV is [usually] different for other AlbedoMaps
+				uv_link = links.new(albedo_uv_nodes[i].outputs['UV'], albedo_nodes[i+1].inputs['Vector'])
 				if i > 0:
 					mixRGB_link = links.new(albedo_mixRGB_nodes[i-1].outputs['Color'], albedo_mixRGB_nodes[i].inputs['Color2'])
+			# Preserve Alpha for last texture (Harmony Square signage?)
+			links.new(albedo_nodes[-1].outputs['Alpha'], principled.inputs['Alpha'])
 			mixRGB_link = links.new(albedo_mixRGB_nodes[-1].outputs['Color'], principled.inputs['Base Color'])
 
 	# Mask Nodes
@@ -299,7 +287,7 @@ def consturct_materials(texture_dir, material):
 	mask_sepRGB_nodes = []
 	mask_invert_nodes = []
 	for i, textureID in enumerate(mask_maps.values()):
-		texture_file = "%s/%s.dds" % (texture_dir, textureID)
+		texture_file = f"{texture_dir}/{textureID}.dds" if os.path.exists(f"{texture_dir}/{textureID}.dds") else f"{texture_dir}/{textureID}.png"
 		if os.path.exists(texture_file):
 			mask_image = nodes.new(type='ShaderNodeTexImage')
 			mask_nodes.append(mask_image)
@@ -322,28 +310,7 @@ def consturct_materials(texture_dir, material):
 				mask_invert_nodes.append(invert_shader)
 				invert_shader.location = 600, ((len(albedo_maps)+1)*-60)-i*60
 				invert_shader.hide = True
-		elif os.path.exists(texture_file.replace(".dds", ".png")):
-			mask_image = nodes.new(type='ShaderNodeTexImage')
-			mask_nodes.append(mask_image)
-			mask_image.location = 0, ((len(albedo_maps)+1)*-60)-i*60
-			mask_image.image = bpy.data.images.load(texture_file.replace(".dds", ".png"))
-			mask_image.image.colorspace_settings.name = 'Non-Color'
-			mask_image.hide = True
-			if i > 0:
-				mask_image.label = "g_MaskMap" + str(i-1)
-			else:
-				mask_image.label = "g_MaskMap"
 
-			if 'Hair' not in material['Shader_Name']:
-				sepRGB_shader = nodes.new(type="ShaderNodeSeparateRGB")
-				mask_sepRGB_nodes.append(sepRGB_shader)
-				sepRGB_shader.location = 300, ((len(albedo_maps)+1)*-60)-i*60
-				sepRGB_shader.hide = True
-				
-				invert_shader = nodes.new(type="ShaderNodeInvert")
-				mask_invert_nodes.append(invert_shader)
-				invert_shader.location = 600, ((len(albedo_maps)+1)*-60)-i*60
-				invert_shader.hide = True
 	#Mask Links
 	if len(mask_nodes) > 0:
 		if 'Hair' not in material['Shader_Name']:
@@ -358,29 +325,12 @@ def consturct_materials(texture_dir, material):
 	normal_nodes = []
 	normal_mixRGB_nodes = []
 	for i, textureID in enumerate(normal_maps.values()):
-		texture_file = "%s/%s.dds" % (texture_dir, textureID)
+		texture_file = f"{texture_dir}/{textureID}.dds" if os.path.exists(f"{texture_dir}/{textureID}.dds") else f"{texture_dir}/{textureID}.png"
 		if os.path.exists(texture_file):
 			normal_image = nodes.new(type='ShaderNodeTexImage')
 			normal_nodes.append(normal_image)
 			normal_image.location = 0, ((len(albedo_maps)+1)*-60) + ((len(mask_maps)+1)*-60)-i*60
 			normal_image.image = bpy.data.images.load(texture_file)
-			normal_image.image.colorspace_settings.name = 'Non-Color'
-			normal_image.hide = True
-			if i > 0:
-				normal_image.label = "g_NormalMap" + str(i-1)
-			else:
-				normal_image.label = "g_NormalMap"
-
-			if i > 0:
-				n_mixRGB_shader = nodes.new(type='ShaderNodeMixRGB')
-				normal_mixRGB_nodes.append(n_mixRGB_shader)
-				n_mixRGB_shader.location = 300, ((len(albedo_maps)+1)*-60) + ((len(mask_maps)+1)*-60)-(i-1)*60
-				n_mixRGB_shader.hide = True
-		elif os.path.exists(texture_file.replace(".dds", ".png")):
-			normal_image = nodes.new(type='ShaderNodeTexImage')
-			normal_nodes.append(normal_image)
-			normal_image.location = 0, ((len(albedo_maps)+1)*-60) + ((len(mask_maps)+1)*-60)-i*60
-			normal_image.image = bpy.data.images.load(texture_file.replace(".dds", ".png"))
 			normal_image.image.colorspace_settings.name = 'Non-Color'
 			normal_image.hide = True
 			if i > 0:
