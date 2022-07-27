@@ -32,6 +32,23 @@ class ImportAstralChain(bpy.types.Operator, ImportHelper):
             wmb_importer.reset_blend()
         return wmb_importer.main(False, self.filepath)
 
+class ImportCOLAstralChain(bpy.types.Operator, ImportHelper):
+    '''Load an Astral Chain COL File.'''
+    bl_idname = "import_scene.col_data_ac"
+    bl_label = "Import COL Data"
+    bl_options = {'PRESET'}
+    filename_ext = ".col"
+    filter_glob: StringProperty(default="*.col", options={'HIDDEN'})
+
+    reset_blend: bpy.props.BoolProperty(name="Reset Blender Scene on Import", default=True)
+
+    def execute(self, context):
+        from . import col_importer
+        from .wmb_importer import reset_blend
+        if self.reset_blend:
+            reset_blend()
+        return col_importer.main(False, self.filepath)
+
 class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
     '''Load an Astral Chain DTT (and DAT) File.'''
     bl_idname = "import_scene.dtt_data_ac"
@@ -106,17 +123,24 @@ def ac_menu_func_import(self, context):
 def ac_menu_func_import_dat(self, context):
     self.layout.operator(ImportDATAstralChain.bl_idname, text="DTT File for Astral Chain (.dtt)")
 
+def ac_menu_func_import_col(self, context):
+    self.layout.operator(ImportCOLAstralChain.bl_idname, text="COL File for Astral Chain (.col)")
+
 def register():
     bpy.utils.register_class(ImportAstralChain)
     bpy.utils.register_class(ImportDATAstralChain)
+    bpy.utils.register_class(ImportCOLAstralChain)
     bpy.types.TOPBAR_MT_file_import.append(ac_menu_func_import)
     bpy.types.TOPBAR_MT_file_import.append(ac_menu_func_import_dat)
+    bpy.types.TOPBAR_MT_file_import.append(ac_menu_func_import_col)
 
 def unregister():
     bpy.utils.unregister_class(ImportAstralChain)
     bpy.utils.unregister_class(ImportDATAstralChain)
+    bpy.utils.unregister_class(ImportCOLAstralChain)
     bpy.types.TOPBAR_MT_file_import.remove(ac_menu_func_import)
     bpy.types.TOPBAR_MT_file_import.remove(ac_menu_func_import_dat)
+    bpy.types.TOPBAR_MT_file_import.remove(ac_menu_func_import_col)
 
 
 if __name__ == '__main__':
