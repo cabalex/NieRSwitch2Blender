@@ -57,31 +57,35 @@ class DDSHeader(object):
 			output += bytearray(b"\x5F\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00")
 		return output
 
+formats = {
+	# DDS
+	0x25: "R8G8B8A8_UNORM",
+	0x42: "BC1_UNORM",
+	0x43: "BC2_UNORM",
+	0x44: "BC3_UNORM",
+	0x45: "BC4_UNORM",
+	0x46: "BC1_UNORM_SRGB",
+	0x47: "BC2_UNORM_SRGB",
+	0x48: "BC3_UNORM_SRGB",
+	0x49: "BC4_SNORM",
+	0x50: "BC6H_UF16",
+	# ASTC (weird texture formats ??)
+	0x2D: "ASTC_4x4_UNORM",
+	0x38: "ASTC_8x8_UNORM",
+	0x3A: "ASTC_12x12_UNORM",
+	# ASTC
+	0x79: "ASTC_4x4_UNORM",
+	0x80: "ASTC_8x8_UNORM",
+	0x87: "ASTC_4x4_SRGB",
+	0x8E: "ASTC_8x8_SRGB",
+
+	# Unknown NieR switch formats
+    0x7D: "ASTC_6x6_UNORM",
+    0x8B: "ASTC_6x6_SRGB",
+}
 
 class AstralChainTexture(object):
 	def __init__(self, unpacked):
-		formats = {
-			# DDS
-			0x25: "R8G8B8A8_UNORM",
-			0x42: "BC1_UNORM",
-			0x43: "BC2_UNORM",
-			0x44: "BC3_UNORM",
-			0x45: "BC4_UNORM",
-			0x46: "BC1_UNORM_SRGB",
-			0x47: "BC2_UNORM_SRGB",
-			0x48: "BC3_UNORM_SRGB",
-			0x49: "BC4_SNORM",
-			0x50: "BC6H_UF16",
-			# ASTC (weird texture formats ??)
-			0x2D: "ASTC_4x4_UNORM",
-			0x38: "ASTC_8x8_UNORM",
-			0x3A: "ASTC_12x12_UNORM",
-			# ASTC
-			0x79: "ASTC_4x4_UNORM",
-			0x80: "ASTC_8x8_UNORM",
-			0x87: "ASTC_4x4_SRGB",
-			0x8E: "ASTC_8x8_SRGB"
-		}
 		self.magic = unpacked[0]
 		self.unknown = unpacked[1]
 		self.imageSize = [unpacked[2], unpacked[3]]
@@ -106,6 +110,52 @@ class AstralChainTexture(object):
 		return [pack("<4s13I", self.magic, self.unknown, self.imageSize[0], self.imageSize[1], self.headerSize, self.mipCount, self._typeval,
 			self._formatval, self.width, self.height, self.depth, self.unknown4, self.textureLayout, self.textureLayout2), self.identifier]
 
+	def getImageData(self, textureData):
+		blockHeightLog2 = self.textureLayout & 7
+		texture = getImageData(self, textureData, 0, 0, 0, blockHeightLog2, 1)
+		print(f"Loaded texture {self.identifier} ({self._format})")
+		if self._format.startswith("ASTC"): # Texture is ASTC
+			print(f"[!] This texture ({self.identifier}) is ASTC, and hence must be converted to be used in Blender.")
+			formatInfo = returnFormatTable(self._format)
+			outBuffer = b''.join([
+						b'\x13\xAB\xA1\x5C', formatInfo[1].to_bytes(1, "little"),
+						formatInfo[2].to_bytes(1, "little"), b'\1',
+						self.width.to_bytes(3, "little"),
+						self.height.to_bytes(3, "little"), b'\1\0\0',
+						texture,
+					])
+			return outBuffer, True
+		else: # Texture is DDS
+			# must generate header data to add onto the beginning
+			print(f"Adding header Data to {self.identifier}")
+			headerDataObject = DDSHeader(self)
+			headerData = headerDataObject.save()
+			finalTexture = headerData + texture
+			return finalTexture, False
+
+class NieRSwitchTexture:
+	def __init__(self, extracted):
+		self.id = id
+
+		self.magic = extracted[0]
+		self._formatval = extracted[1]
+		self._format = formats[self._formatval]
+		self.version = extracted[2]
+		self.width = extracted[3]
+		self.height = extracted[4]
+		self.depth = extracted[5]
+		self.mipCount = extracted[6]
+		self.unknown1 = extracted[7]
+		self.unknown2 = extracted[8]
+		self.unknown3 = extracted[9]
+
+		self.textureLayout = 4  # A COMPLETE GUESS
+		self.arrayCount = 1
+	
+	def save(self):
+		return [pack("<8Ieh", self.magic, self._formatval, self.version, self.width, self.height, self.depth,
+		self.mipCount, self.unknown1, self.unknown2, self.unknown3), self.identifier]
+	
 	def getImageData(self, textureData):
 		blockHeightLog2 = self.textureLayout & 7
 		texture = getImageData(self, textureData, 0, 0, 0, blockHeightLog2, 1)
@@ -185,6 +235,37 @@ class WTA(object):
 				for i in range(self.textureCount):
 					self.textureHeader_metadata += pack("8s", bytes(textureOutputs[i][1], 'ascii'))
 				self.textureHeader_metadata = pack("<2I", textureNameOffset, self.textureCount) + self.textureHeader_metadata
+			elif unknownval == b'.tex':
+				self.game = "NIERSWITCH" # NieR Switch uses .tex textures; it is explicitly defined here
+
+				print('! Loading a NieR Switch WTA file')
+				wta_fp.seek(wta_fp.tell()-4)
+				
+				self.NSTextures = []
+				start = wta_fp.tell()
+				for i in range(self.textureCount):
+					wta_fp.seek(start + 0x100 * i)
+
+					tex = NieRSwitchTexture(unpack("<8Ieh", wta_fp.read(36)))
+					tex.identifier = self.wtaTextureIdentifier[i]
+					self.NSTextures.append(tex)
+
+				self.pointer2 = hex(wta_fp.tell())
+				self.textureHeader_metadata = b'' # This may need to change in the future
+				"""
+				ac_texture_header.metadata -
+				- texture identifier offset
+				- number of textures
+				> WTA texture header table
+				> WTA texture identifier table
+				"""
+				textureOutputs = [t.save() for t in self.NSTextures]
+				for i in range(self.textureCount):
+					self.textureHeader_metadata += textureOutputs[i][0] # Might need to save file name?
+				textureNameOffset = len(self.textureHeader_metadata) + 4
+				for i in range(self.textureCount):
+					self.textureHeader_metadata += pack("8s", bytes(textureOutputs[i][1], 'ascii'))
+				self.textureHeader_metadata = pack("<2I", textureNameOffset, self.textureCount) + self.textureHeader_metadata
 			else:
 				print('! Loading a NieR WTA file')
 				self.textureHeader_metadata = False
@@ -202,6 +283,9 @@ class WTA(object):
 		if self.game == "ASTRALCHAIN":
 			# Get image data from class
 			return self.ACTextures[texture_index].getImageData(texture)
+		elif self.game == "NIERSWITCH":
+			# Get image data from class
+			return self.NSTextures[texture_index].getImageData(texture)
 		return texture, False
 
 	def getTextureByIdentifier(self, textureIdentifier, texture_fp):

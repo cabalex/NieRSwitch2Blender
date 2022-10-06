@@ -17,8 +17,10 @@ formatTable = {
 	"BC4_SNORM": [8, 4, 4, 1],
 	"BC6H_UF16": [16, 4, 4, 1],
 	"ASTC_4x4_UNORM": [16, 4, 4, 1],
+	"ASTC_6x6_UNORM": [16, 6, 6, 1],
 	"ASTC_8x8_UNORM": [16, 8, 8, 1],
 	"ASTC_4x4_SRGB": [16, 4, 4, 1],
+	"ASTC_6x6_SRGB": [16, 6, 6, 1],
 	"ASTC_8x8_SRGB": [16, 8, 8, 1]
 }
 # each one: bytesPerPixel, blockWidth, blockHeight, blockDepth, targetBuffer (but i removed targetBuffer)

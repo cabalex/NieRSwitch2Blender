@@ -1,11 +1,11 @@
 bl_info = {
-    "name": "AstralChain2Blender (Astral Chain Model Importer)",
+    "name": "NierSwitch2Blender (Nier Switch Model Importer)",
     "author": "Cabalex and Woeful_Wolf (Original by C4nf3ng)",
     "version": (2, 2),
     "blender": (2, 80, 0),
     "api": 38019,
     "location": "File > Import",
-    "description": "Import Astral Chain Model Data",
+    "description": "Import Nier Switch Model Data",
     "warning": "",
     "wiki_url": "",
     "tracker_url": "",
@@ -16,9 +16,9 @@ import os
 from bpy_extras.io_utils import ExportHelper,ImportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 
-class ImportAstralChain(bpy.types.Operator, ImportHelper):
-    '''Load an Astral Chain WMB File.'''
-    bl_idname = "import_scene.wmb_data_ac"
+class ImportNierSwitch(bpy.types.Operator, ImportHelper):
+    '''Load a NieR Switch WMB File.'''
+    bl_idname = "import_scene.wmb_data_ns"
     bl_label = "Import WMB Data"
     bl_options = {'PRESET'}
     filename_ext = ".wmb"
@@ -32,26 +32,9 @@ class ImportAstralChain(bpy.types.Operator, ImportHelper):
             wmb_importer.reset_blend()
         return wmb_importer.main(False, self.filepath)
 
-class ImportCOLAstralChain(bpy.types.Operator, ImportHelper):
-    '''Load an Astral Chain COL File.'''
-    bl_idname = "import_scene.col_data_ac"
-    bl_label = "Import COL Data"
-    bl_options = {'PRESET'}
-    filename_ext = ".col"
-    filter_glob: StringProperty(default="*.col", options={'HIDDEN'})
-
-    reset_blend: bpy.props.BoolProperty(name="Reset Blender Scene on Import", default=True)
-
-    def execute(self, context):
-        from . import col_importer
-        from .wmb_importer import reset_blend
-        if self.reset_blend:
-            reset_blend()
-        return col_importer.main(False, self.filepath)
-
-class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
-    '''Load an Astral Chain DTT (and DAT) File.'''
-    bl_idname = "import_scene.dtt_data_ac"
+class ImportDATNierSwitch(bpy.types.Operator, ImportHelper):
+    '''Load a NieR Switch DTT (and DAT) File.'''
+    bl_idname = "import_scene.dtt_data_ns"
     bl_label = "Import DTT (and DAT) Data"
     bl_options = {'PRESET'}
     filename_ext = ".dtt"
@@ -75,7 +58,7 @@ class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
                         tail = os.path.split(filepath)[1]
                         tailless_tail = tail[:-4]
                         dat_filepath = head + '\\' + tailless_tail + '.dat'
-                        extract_dir = head + '\\astralchain2blender_extracted'
+                        extract_dir = head + '\\nierswitch2blender_extracted'
                         from . import dat_unpacker
                         if os.path.isfile(dat_filepath):
                             dat_unpacker.main(dat_filepath, extract_dir + '\\' + tailless_tail + '.dat', dat_filepath)   # dat
@@ -98,7 +81,7 @@ class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
             tail = os.path.split(self.filepath)[1]
             tailless_tail = tail[:-4]
             dat_filepath = head + '\\' + tailless_tail + '.dat'
-            extract_dir = head + '\\astralchain2blender_extracted'
+            extract_dir = head + '\\nierswitch2blender_extracted'
             from . import dat_unpacker
             if os.path.isfile(dat_filepath):
                 dat_unpacker.main(dat_filepath, extract_dir + '\\' + tailless_tail + '.dat', dat_filepath)   # dat
@@ -117,30 +100,23 @@ class ImportDATAstralChain(bpy.types.Operator, ImportHelper):
 
 # Registration
 
-def ac_menu_func_import(self, context):
-    self.layout.operator(ImportAstralChain.bl_idname, text="WMB File for Astral Chain (.wmb)")
+def ns_menu_func_import(self, context):
+    self.layout.operator(ImportNierSwitch.bl_idname, text="WMB File for NieR Switch (.wmb)")
 
-def ac_menu_func_import_dat(self, context):
-    self.layout.operator(ImportDATAstralChain.bl_idname, text="DTT File for Astral Chain (.dtt)")
-
-def ac_menu_func_import_col(self, context):
-    self.layout.operator(ImportCOLAstralChain.bl_idname, text="COL File for Astral Chain (.col)")
+def ns_menu_func_import_dat(self, context):
+    self.layout.operator(ImportDATNierSwitch.bl_idname, text="DTT File for NieR Switch (.dtt)")
 
 def register():
-    bpy.utils.register_class(ImportAstralChain)
-    bpy.utils.register_class(ImportDATAstralChain)
-    bpy.utils.register_class(ImportCOLAstralChain)
-    bpy.types.TOPBAR_MT_file_import.append(ac_menu_func_import)
-    bpy.types.TOPBAR_MT_file_import.append(ac_menu_func_import_dat)
-    bpy.types.TOPBAR_MT_file_import.append(ac_menu_func_import_col)
+    bpy.utils.register_class(ImportNierSwitch)
+    bpy.utils.register_class(ImportDATNierSwitch)
+    bpy.types.TOPBAR_MT_file_import.append(ns_menu_func_import)
+    bpy.types.TOPBAR_MT_file_import.append(ns_menu_func_import_dat)
 
 def unregister():
-    bpy.utils.unregister_class(ImportAstralChain)
-    bpy.utils.unregister_class(ImportDATAstralChain)
-    bpy.utils.unregister_class(ImportCOLAstralChain)
-    bpy.types.TOPBAR_MT_file_import.remove(ac_menu_func_import)
-    bpy.types.TOPBAR_MT_file_import.remove(ac_menu_func_import_dat)
-    bpy.types.TOPBAR_MT_file_import.remove(ac_menu_func_import_col)
+    bpy.utils.unregister_class(ImportNierSwitch)
+    bpy.utils.unregister_class(ImportDATNierSwitch)
+    bpy.types.TOPBAR_MT_file_import.remove(ns_menu_func_import)
+    bpy.types.TOPBAR_MT_file_import.remove(ns_menu_func_import_dat)
 
 
 if __name__ == '__main__':
